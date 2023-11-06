@@ -95,7 +95,7 @@ def run_sync(port, root_folder, delay, concurrency):
                     handle_client_request_sync, conn, addr, root_folder, delay
                 )
     except KeyboardInterrupt:
-        logging.info("Shutting down server")
+        logging.info("KeyboardInterrupt received, shutting down...")
         if concurrency == "thread-pool":
             pool.stop_all()
         elif concurrency == "thread":
@@ -189,8 +189,10 @@ async def run_async(port, root_folder, delay):
             await server.serve_forever()
         except asyncio.CancelledError:
             logging.info("Server was cancelled, shutting down...")
+            server.close()
+            await server.wait_closed()
         except KeyboardInterrupt:  # Handle Ctrl+C for async server
-            logging.info("Shutting down async server")
+            logging.info("KeyboardInterrupt received, shutting down async server")
             server.close()
             await server.wait_closed()
 
@@ -226,7 +228,10 @@ def run(port, root_folder, delay, concurrency):
     :return: None
     """
     if concurrency == "async":
-        asyncio.run(run_async(port, root_folder, delay))
+        try:
+            asyncio.run(run_async(port, root_folder, delay))
+        except KeyboardInterrupt:
+            logging.info("KeyboardInterrupt received, shutting down...")
     else:
         run_sync(port, root_folder, delay, concurrency)
 
@@ -264,7 +269,7 @@ if __name__ == "__main__":
         "--concurrency",
         required=False,
         choices=["thread", "thread-pool", "async"],
-        default="async",
+        default="thread",
         help="concurrency methodology to use",
     )
 
