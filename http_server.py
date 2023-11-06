@@ -227,6 +227,13 @@ def run(port, root_folder, delay, concurrency):
 
     :return: None
     """
+
+    # Check if the root folder exists
+    if not os.path.exists(root_folder):
+        logging.error(f"The provided folder '{root_folder}' does not exist.")
+        logging.info('Defaulting to "www"')
+        root_folder = "www"
+
     if concurrency == "async":
         try:
             asyncio.run(run_async(port, root_folder, delay))
